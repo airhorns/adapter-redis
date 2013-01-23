@@ -14,9 +14,6 @@ log_path  = root_path.join('log')
 log_path.mkpath
 
 require 'adapter/spec/an_adapter'
-require 'adapter/spec/marshal_adapter'
-require 'adapter/spec/json_adapter'
-require 'adapter/spec/types'
 
 logger = Logger.new(log_path.join('test.log'))
 LogBuddy.init(:logger => logger)

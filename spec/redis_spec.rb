@@ -11,7 +11,7 @@ describe "Redis adapter" do
   let(:adapter) { @adapter }
   let(:client)  { @client }
 
-  it_should_behave_like 'a marshaled adapter'
+  it_should_behave_like 'an adapter'
 
   describe "#lock" do
     let(:lock_key) { :add_game }

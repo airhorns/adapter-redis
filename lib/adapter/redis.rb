@@ -3,19 +3,26 @@ require 'redis'
 
 module Adapter
   module Redis
-    def read(key)
-      decode(client.get(key_for(key)))
+    def read(key, options = nil)
+      decode(client.get(key))
     end
 
-    def write(key, value)
-      client.set(key_for(key), encode(value))
+    def read_multiple(keys, options = nil)
+      client.mapped_mget(*keys).reduce({}) do |result, (key, value)|
+        result[key] = decode(value)
+        result
+      end
     end
 
-    def delete(key)
-      read(key).tap { client.del(key_for(key)) }
+    def write(key, value, options = nil)
+      client.set(key, encode(value))
     end
 
-    def clear
+    def delete(key, options = nil)
+      client.del(key)
+    end
+
+    def clear(options = nil)
       client.flushdb
     end
 
@@ -61,6 +68,17 @@ module Adapter
     # Defaults expiration to 1
     def generate_expiration(expiration)
       (Time.now + (expiration || 1).to_f).to_f
+    end
+
+    private
+
+    def decode(string_or_nil)
+      return nil unless string_or_nil
+      Marshal.load(string_or_nil)
+    end
+
+    def encode(hash)
+      Marshal.dump(hash)
     end
   end
 end
