@@ -1,5 +1,5 @@
 require 'helper'
-require 'adapter/redis'
+require 'adapter-redis'
 
 describe "Redis adapter" do
   before do

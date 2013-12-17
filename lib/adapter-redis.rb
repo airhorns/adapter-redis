@@ -1,0 +1,2 @@
+require 'adapter/redis'
+
