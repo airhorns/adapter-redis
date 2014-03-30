@@ -74,11 +74,19 @@ module Adapter
 
     def decode(string_or_nil)
       return nil unless string_or_nil
+      if options[:serializer]
+        begin
+          return options[:serializer].load(string_or_nil)
+        rescue => e
+          raise unless options[:deserializer_exception] && e.class == options[:deserializer_exception]
+        end
+      end
       Marshal.load(string_or_nil)
     end
 
     def encode(hash)
-      Marshal.dump(hash)
+      serializer = options[:serializer] || Marshal
+      serializer.dump(hash)
     end
   end
 end
