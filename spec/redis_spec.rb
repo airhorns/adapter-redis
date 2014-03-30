@@ -1,5 +1,6 @@
 require 'helper'
 require 'adapter-redis'
+require 'yaml'
 
 describe "Redis adapter" do
   before do
@@ -64,6 +65,37 @@ describe "Redis adapter" do
           adapter.lock(lock_key, :timeout => 1) { result = true }
         end.should raise_error(Adapter::LockTimeout, 'Timeout on lock add_game exceeded 1 sec')
       end
+    end
+  end
+
+  describe "serialization" do
+    let(:adapter) { Adapter[:redis].new(client, :serializer => YAML) }
+
+    it "writes yaml" do
+      adapter.write("mytestkey", {:foo => "bar"})
+      expect { YAML.load(client.get("mytestkey")) }.to_not raise_error(Psych::SyntaxError)
+    end
+
+    it "loads yaml" do
+      adapter.write("mytestkey", {:foo => "bar"})
+      result = nil
+      expect { result = adapter.read("mytestkey") }.to_not raise_error(Psych::SyntaxError)
+      result.should eq({ :foo => "bar" })
+    end
+
+    it "loads marshaled representation" do
+      rescue_adapter = Adapter[:redis].new(client, :serializer => YAML, :deserializer_exception => Psych::SyntaxError)
+      marshal_adapter = Adapter[:redis].new(client)
+      marshal_adapter.write("mytestkey", {:foo => "bar"})
+      result = nil
+      expect { result = rescue_adapter.read("mytestkey") }.to_not raise_error(Psych::SyntaxError)
+      result.should eq({ :foo => "bar" })
+    end
+
+    it "raises on deserialization error" do
+      marshal_adapter = Adapter[:redis].new(client)
+      marshal_adapter.write("mytestkey", {:foo => "bar"})
+      expect { adapter.read("mytestkey") }.to raise_error(Psych::SyntaxError)
     end
   end
 end
